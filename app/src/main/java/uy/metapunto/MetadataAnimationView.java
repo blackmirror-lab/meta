@@ -22,7 +22,7 @@ public final class MetadataAnimationView extends View {
  private boolean moving(){return mode==Mode.INTRO||mode==Mode.SCAN||mode==Mode.CLEAN||mode==Mode.SAVE;}
  private String label(){switch(mode){case INTRO:return "MetaPunto · privacidad en tus archivos";case SCAN:return "Inspeccionando metadatos…";case CLEAN:return "Limpiando la copia…";case SAVE:return "Guardando copia…";case DONE:return "Copia lista";case ERROR:return "No se completó el proceso";default:return "Seleccioná un archivo para comenzar";}}
  private void stop(){if(animator!=null){animator.removeAllListeners();animator.cancel();animator=null;}}
- private void restart(){if(!isAttachedToWindow()||getWindowVisibility()!=VISIBLE||!moving())return;if(!ValueAnimator.areAnimatorsEnabled()){if(mode==Mode.INTRO)mode=Mode.READY;setContentDescription(label());invalidate();return;}animator=ValueAnimator.ofFloat(0f,1f);animator.setDuration(mode==Mode.INTRO?1700:2300);animator.setInterpolator(new LinearInterpolator());animator.setRepeatCount(mode==Mode.INTRO?0:ValueAnimator.INFINITE);animator.addUpdateListener(a->{phase=(float)a.getAnimatedValue();invalidate();});if(mode==Mode.INTRO)animator.addListener(new AnimatorListenerAdapter(){@Override public void onAnimationEnd(Animator a){show(Mode.READY);}});animator.start();}
+ private void restart(){if(animator!=null||!isAttachedToWindow()||getWindowVisibility()!=VISIBLE||!moving())return;if(!ValueAnimator.areAnimatorsEnabled()){if(mode==Mode.INTRO)mode=Mode.READY;setContentDescription(label());invalidate();return;}animator=ValueAnimator.ofFloat(0f,1f);animator.setDuration(mode==Mode.INTRO?1700:2300);animator.setInterpolator(new LinearInterpolator());animator.setRepeatCount(mode==Mode.INTRO?0:ValueAnimator.INFINITE);animator.addUpdateListener(a->{phase=(float)a.getAnimatedValue();invalidate();});if(mode==Mode.INTRO)animator.addListener(new AnimatorListenerAdapter(){@Override public void onAnimationEnd(Animator a){show(Mode.READY);}});animator.start();}
  @Override protected void onAttachedToWindow(){super.onAttachedToWindow();restart();}
  @Override protected void onDetachedFromWindow(){stop();super.onDetachedFromWindow();}
  @Override protected void onWindowVisibilityChanged(int visibility){super.onWindowVisibilityChanged(visibility);if(visibility==VISIBLE){if(animator==null)restart();}else stop();}
@@ -35,7 +35,7 @@ public final class MetadataAnimationView extends View {
  if(mode==Mode.DONE){paint.setStyle(Paint.Style.FILL);paint.setColor(Color.rgb(42,196,146));canvas.drawCircle(207,113,17,paint);line(canvas,199,113,205,119,Color.WHITE,2.5f);line(canvas,205,119,216,106,Color.WHITE,2.5f);}
  else if(mode==Mode.ERROR){text(canvas,"!",209,124,Color.rgb(255,170,124),29);}
  else{
- String[] labels={"GPS","Autor","Fecha","XMP"};float[] xs={79,281,79,281},ys={54,54,115,115};
+ String[] labels=mode==Mode.CLEAN?new String[]{"Nombre","Autor","Título","Programa"}:new String[]{"Lugar","Autor","Fecha","Programa"};float[] xs={79,281,79,281},ys={54,54,115,115};
  for(int j=0;j<4;j++){float bob=moving()?(float)Math.sin(phase*Math.PI*2+j)*3:0;line(canvas,xs[j]+(j%2==0?23:-23),ys[j]-4, j%2==0?149:213,76,Color.rgb(35,74,98),1);String t=labels[j];int color=MUTED;
  if(mode==Mode.CLEAN){float tphase=(phase+j*.16f)%1f;if(tphase>.45f){t=".";color=CYAN;}}
  text(canvas,t,xs[j],ys[j]+bob,color,13);}
